@@ -12,26 +12,28 @@ import PropTypes from "prop-types";
 const StoreItem = ({
   image,
   title,
-  description,
-  cost,
-  coins,
+  initialCost, 
   plusClick,
-  setCoins,
-  buyItem, // Recebendo a função buyItem como uma propriedade
-  itemId, // Recebendo o ID do item como uma propriedade
-  quantity, // Recebendo a quantidade como uma propriedade
+  buyItem,
+  itemId,
+  quantity,
 }) => {
   const [isTablet, setIsTablet] = useState(false);
 
   useEffect(() => {
     const { width, height } = Dimensions.get("window");
     const aspectRatio = height / width;
-    setIsTablet(aspectRatio < 1.6); // Se o aspect ratio for menor que 1.6, é considerado um tablet
+    setIsTablet(aspectRatio < 1.6);
   }, []);
+
+  // Calcula o custo final com base no custo inicial e na quantidade comprada
+  const finalCost = Math.ceil(initialCost * Math.pow(1.3, quantity)).toLocaleString();
+
+
 
   return (
     <TouchableOpacity
-      onPress={() => buyItem(itemId, cost, plusClick)}
+      onPress={() => buyItem(itemId, initialCost, plusClick)}
       style={[styles.itemBuy, isTablet && styles.itemBuyTablet]}
     >
       <View style={styles.container}>
@@ -49,7 +51,7 @@ const StoreItem = ({
                   source={require("../assets/game_imgs/coin.png")}
                   style={styles.coin}
                 />
-                <Text style={styles.cost}>{cost}</Text>
+                <Text style={styles.cost}>{finalCost}</Text>
               </View>
             </View>
 
@@ -67,7 +69,7 @@ const StoreItem = ({
 StoreItem.propTypes = {
   image: PropTypes.number.isRequired,
   title: PropTypes.string.isRequired,
-  cost: PropTypes.number.isRequired,
+  initialCost: PropTypes.number.isRequired, // Adicione initialCost como propriedade
   coins: PropTypes.number.isRequired,
   setCoins: PropTypes.func.isRequired,
 };
@@ -83,27 +85,27 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   itemBuy: {
-    backgroundColor: "#0C0C0C",
-    marginBottom: 8,
+    backgroundColor: "#0c0c0c",
+    marginBottom: 15,
     borderRadius: 10,
   },
   itemBuyTablet: {
     marginBottom: 20,
-    backgroundColor: "#1a1a1a", // Estilos específicos para tablets
+    backgroundColor: "#0c0c0c",
   },
   container: {
     flexDirection: "row",
     alignItems: "center",
   },
   image: {
-    width: 70,
-    height: 70,
-    marginRight: 10,
+    width: 80,
+    height: 80,
+    marginRight: 3,
     borderTopLeftRadius: 10,
     borderBottomLeftRadius: 10,
   },
   imageTablet: {
-    width: 140, // Tamanho da imagem para tablets
+    width: 140,
     height: 140,
   },
   details: {
