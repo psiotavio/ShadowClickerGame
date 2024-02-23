@@ -79,7 +79,7 @@ export default function App() {
   };
 
   const incrementCoins = () => {
-    setCoins(coins + click + 99999999999999);
+    setCoins(coins + click);
     console.log("CLICOU GANHOU: + " + click);
   };
 
@@ -88,6 +88,11 @@ export default function App() {
     setClick(1); // Reinicia para 1.0
     setItemQuantities({}); // Reinicia para um objeto vazio
     console.log("!! RESETOU TUDO !!");
+  };
+
+  const magicButton = () => {
+    setCoins(1000);
+    console.log("!! GANHOU TUDO !!");
   };
 
   const openModal = () => {
@@ -129,6 +134,9 @@ export default function App() {
       <Coin incrementCoins={incrementCoins} />
       <TouchableOpacity onPress={resetCoins}>
         <Icon name="circle" size={60} color="green" />
+      </TouchableOpacity>
+      <TouchableOpacity onPress={magicButton}>
+        <Icon name="circle" size={60} color="blue" />
       </TouchableOpacity>
 
       <View style={styles.bottomBar}>
