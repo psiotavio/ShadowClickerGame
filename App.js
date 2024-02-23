@@ -1,10 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { StatusBar } from "expo-status-bar";
 import {
   View,
   Modal,
   ScrollView,
-  Text,
   TouchableOpacity,
   StyleSheet,
   Dimensions,
@@ -15,15 +14,57 @@ import Coin from "./components/Coin";
 import Header from "./components/Header";
 import Icon from "react-native-vector-icons/FontAwesome";
 import StoreItem from "./components/StoreItems";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const windowWidth = Dimensions.get("window").width;
 const windowHeight = Dimensions.get("window").height;
 
 export default function App() {
   const [modalVisible, setModalVisible] = useState(false);
-  const [click, setClick] = useState(1.0); // Valor inicial como float
-  const [coins, setCoins] = useState(0.0); // Valor inicial como float
-  const [itemQuantities, setItemQuantities] = useState({}); // Estado para armazenar as quantidades dos itens comprados
+  const [click, setClick] = useState(1.0);
+  const [coins, setCoins] = useState(0.0);
+  const [itemQuantities, setItemQuantities] = useState({});
+
+  useEffect(() => {
+    loadGameState();
+  }, []);
+
+  useEffect(() => {
+    saveGameState();
+  }, [click, coins, itemQuantities]);
+
+  // Carregar dados do AsyncStorage
+  const loadGameState = async () => {
+    try {
+      const savedClick = await AsyncStorage.getItem("click");
+      const savedCoins = await AsyncStorage.getItem("coins");
+      const savedItemQuantities = await AsyncStorage.getItem("itemQuantities");
+
+      if (savedClick !== null) {
+        setClick(parseFloat(savedClick));
+      }
+      if (savedCoins !== null) {
+        setCoins(parseFloat(savedCoins));
+      }
+      if (savedItemQuantities !== null) {
+        setItemQuantities(JSON.parse(savedItemQuantities));
+      }
+    } catch (error) {
+      console.error("Erro ao carregar dados do AsyncStorage: ", error);
+    }
+  };
+
+  // Salvar dados no AsyncStorage
+  const saveGameState = async () => {
+    try {
+      await AsyncStorage.setItem("click", click.toString());
+      await AsyncStorage.setItem("coins", coins.toString());
+      await AsyncStorage.setItem("itemQuantities", JSON.stringify(itemQuantities));
+    } catch (error) {
+      console.error("Erro ao salvar dados no AsyncStorage: ", error);
+    }
+  };
+
 
   const incrementCoins = () => {
     setCoins(coins + click);
@@ -32,7 +73,11 @@ export default function App() {
 
   const resetCoins = () => {
     setCoins(0.0); // Reinicia para 0.0
+    setClick(1); // Reinicia para 1.0
+    setItemQuantities({}); // Reinicia para um objeto vazio
+    console.log("!! RESETOU TUDO !!")
   };
+  
 
   const openModal = () => {
     setModalVisible(true);
@@ -54,15 +99,17 @@ export default function App() {
       console.log("E O CLIQUE AUMENTOU: " + plusClick);
       console.log(".");
       setCoins(coins - itemCost);
-      setClick(click + plusClick); // Aumenta o click ao comprar
-      setItemQuantities((prevQuantities) => ({
+      setClick(click + plusClick);
+      setItemQuantities(prevQuantities => ({
         ...prevQuantities,
-        [itemId]: (prevQuantities[itemId] || 0) + 1,
+        [itemId]: (prevQuantities[itemId] || 0) + 1
       }));
     } else {
       alert("Você não tem moedas suficientes para comprar este item!");
     }
   };
+  
+  
 
   return (
     <View style={styles.container}>
@@ -105,7 +152,7 @@ export default function App() {
                 cost={50}
                 coins={coins}
                 plusClick={0.2}
-                quantity={itemQuantities["Olho-da-morte"] || 0}
+                quantity={itemQuantities["livro-das-moedas"] || 0}
                 setCoins={setCoins}
                 buyItem={buyItem} 
               />
@@ -119,7 +166,7 @@ export default function App() {
                 cost={100}
                 coins={coins}
                 plusClick={0.5}
-                quantity={itemQuantities["zombie"] || 0}
+                quantity={itemQuantities["castelo"] || 0}
                 setCoins={setCoins}
                 buyItem={(itemId, itemCost, plusClick) =>
                   buyItem(itemId, itemCost, plusClick)
