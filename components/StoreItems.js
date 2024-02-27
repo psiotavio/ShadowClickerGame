@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import * as Font from 'expo-font';
 import {
   View,
   Text,
@@ -30,7 +31,15 @@ const StoreItem = ({
   // Calcula o custo final com base no custo inicial e na quantidade comprada
   const finalCost = Math.ceil(initialCost * Math.pow(1.3, quantity)).toLocaleString();
 
+  useEffect(() => {
+    async function loadFonts() {
+      await Font.loadAsync({
+        'ProtestRevolution-Regular': require('../assets/fonts/ProtestRevolution-Regular.ttf'),
+      });
+    }
 
+    loadFonts();
+  }, []);
 
   return (
     <TouchableOpacity
@@ -122,14 +131,17 @@ const styles = StyleSheet.create({
     fontSize: 21,
     fontWeight: "bold",
     color: "#f2f2f2",
+    fontFamily: "ProtestRevolution-Regular",
   },
   cost: {
+    fontFamily: "ProtestRevolution-Regular",
     fontSize: 16,
     marginTop: 5,
     color: "#f2f2f2",
     fontWeight: "bold",
   },
   quantity: {
+    fontFamily: "ProtestRevolution-Regular",
     fontSize: 16,
     color: "#f2f2f2",
     fontWeight: "bold",

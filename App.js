@@ -17,6 +17,7 @@ import Icon from "react-native-vector-icons/FontAwesome";
 import StoreItem from "./components/StoreItems";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
+import * as Font from 'expo-font';
 
 // const windowWidth = Dimensions.get("window").width;
 // const windowHeight = Dimensions.get("window").height;
@@ -29,11 +30,16 @@ export default function App() {
   const [itemQuantities, setItemQuantities] = useState({});
   const formattedCoins = coins % 1 === 0 ? coins.toFixed(0) : coins.toFixed(2);
   const displayCoins = parseFloat(formattedCoins).toString();
-  let fontSize = 24;
 
-  if (displayCoins.length > 6) {
-    fontSize = 18; 
-  }
+  useEffect(() => {
+    async function loadFonts() {
+      await Font.loadAsync({
+        'ProtestRevolution-Regular': require('./assets/fonts/ProtestRevolution-Regular.ttf'),
+      });
+    }
+
+    loadFonts();
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -180,7 +186,7 @@ export default function App() {
             colors={["#5c0000", "#1c0000"]}
             style={styles.ModalHeader}
           >
-            <Text style={[styles.textModalShop, { fontSize }]}>
+            <Text style={styles.textModalShop}>
               {displayCoins} Evil Coins!
             </Text>
             <TouchableOpacity onPress={closeModal} style={styles.close}>
@@ -454,6 +460,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#5c0000",
   },
   textModalShop: {
+    fontFamily: "ProtestRevolution-Regular",
     alignSelf: "center",
     flex: 1,
     marginTop: 25,
