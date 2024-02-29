@@ -19,10 +19,14 @@ import StoreItem from "./components/StoreItems";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Font from "expo-font";
-import { getItems } from "./item";
+import { getItems } from "./getObjects/item";
+import Pack from "./components/Pack";
+import { getPacks } from "./getObjects/pack";
+
 
 export default function App() {
   const [modalVisible, setModalVisible] = useState(false);
+  const [CardsModalVisible, setCardsModalVisible] = useState(false);
   const [click, setClick] = useState(1.0);
   const [coins, setCoins] = useState(0.0);
   const [coinsPS, setCoinsPS] = useState(0.0);
@@ -130,6 +134,14 @@ export default function App() {
     setModalVisible(false);
   };
 
+  const openCardsModal = () => {
+    setCardsModalVisible(true);
+  };
+
+  const carsModalClose = () => {
+    setCardsModalVisible(false);
+  };
+
   // const addClick = (value) => {
   //   setClick(click + value);
   // };
@@ -205,7 +217,7 @@ export default function App() {
           <Icon name="shopping-bag" size={60} color="#f2f2f2" />
         </TouchableOpacity>
 
-        <TouchableOpacity>
+        <TouchableOpacity onPress={openCardsModal}>
           <Icon name="shopping-cart" size={60} color="#f2f2f2" />
         </TouchableOpacity>
       </View>
@@ -225,6 +237,51 @@ export default function App() {
               {displayCoins} Evil Coins!
             </RNText>
             <TouchableOpacity onPress={closeModal} style={styles.close}>
+              <Icon name="close" size={25} color="#000" />
+            </TouchableOpacity>
+          </LinearGradient>
+          <ScrollView style={styles.scrollContainer}>
+            {getItemsList().map((item) => (
+              <TouchableOpacity key={item.id}>
+                {/* {console.log(
+                  "Caminho da imagem completa:",
+                  itemData[itemId].image
+                )} */}
+
+                <StoreItem
+                  itemId={item.id}
+                  image={item.image}
+                  title={item.title}
+                  initialCost={item.initialCost}
+                  coins={coins}
+                  plusClick={item.plusClick}
+                  quantity={itemQuantities[item.id] || 0}
+                  setCoins={setCoins}
+                  buyItem={() => buyItem(item.id, item.initialCost, item.plusClick)}
+                />
+              </TouchableOpacity>
+            ))}
+            <View style={styles.marginEnd}></View>
+          </ScrollView>
+        </View>
+      </Modal>
+
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={carsModal}
+        onRequestClose={carsModalClose}
+      >
+        <View style={styles.modalContainer}>
+          <LinearGradient
+            colors={["#5c0000", "#1c0000"]}
+            style={styles.ModalHeader}
+          >
+            <RNText style={styles.textModalShop}>
+              {displayCoins} Evil Coins!
+            </RNText>
+            <TouchableOpacity onPress={carsModalClose} style={styles.close}>
               <Icon name="close" size={25} color="#000" />
             </TouchableOpacity>
           </LinearGradient>
