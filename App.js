@@ -6,8 +6,9 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
-  Dimensions,
+  ActivityIndicator,
   Image,
+  Text as RNText,
   Text,
 } from "react-native";
 import Background from "./assets/game_imgs/backgroundGame.jpg";
@@ -17,10 +18,8 @@ import Icon from "react-native-vector-icons/FontAwesome";
 import StoreItem from "./components/StoreItems";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
-import * as Font from 'expo-font';
-
-// const windowWidth = Dimensions.get("window").width;
-// const windowHeight = Dimensions.get("window").height;
+import * as Font from "expo-font";
+import { getItems } from "./item";
 
 export default function App() {
   const [modalVisible, setModalVisible] = useState(false);
@@ -31,11 +30,17 @@ export default function App() {
   const formattedCoins = coins % 1 === 0 ? coins.toFixed(0) : coins.toFixed(2);
   const displayCoins = parseFloat(formattedCoins).toString();
 
+  const [fontLoaded, setFontLoaded] = useState(false);
+
   useEffect(() => {
     async function loadFonts() {
+      await new Promise((resolve) => setTimeout(resolve, 2500));
+
       await Font.loadAsync({
-        'ProtestRevolution-Regular': require('./assets/fonts/ProtestRevolution-Regular.ttf'),
+        "ProtestRevolution-Regular": require("./assets/fonts/ProtestRevolution-Regular.ttf"),
       });
+
+      setFontLoaded(true);
     }
 
     loadFonts();
@@ -43,13 +48,11 @@ export default function App() {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      
       setCoins(coins + coinsPS);
-    }, 1000); 
+    }, 1000);
 
-   
     return () => clearInterval(interval);
-  }); 
+  });
 
   useEffect(() => {
     loadGameState();
@@ -75,7 +78,7 @@ export default function App() {
       if (savedCoinsPS !== null) {
         setCoinsPS(parseFloat(savedCoinsPS));
       }
-      
+
       if (savedItemQuantities !== null) {
         setItemQuantities(JSON.parse(savedItemQuantities));
       }
@@ -89,9 +92,9 @@ export default function App() {
       await AsyncStorage.setItem("click", click.toString());
       await AsyncStorage.setItem("coins", coins.toString());
       await AsyncStorage.setItem("coinsPS", coinsPS.toString()); // Salva coinsPS
-      console.log("SLAVOU: " + click.toString())
-      console.log("SLAVOU: " + coins.toString())
-      console.log("SLAVOU: " + coinsPS.toString())
+      console.log("SLAVOU: " + click.toString());
+      console.log("SLAVOU: " + coins.toString());
+      console.log("SLAVOU: " + coinsPS.toString());
       await AsyncStorage.setItem(
         "itemQuantities",
         JSON.stringify(itemQuantities)
@@ -131,8 +134,13 @@ export default function App() {
   //   setClick(click + value);
   // };
 
+  function getItemsList() {
+    const items = getItems()
+    return Object.keys(items).map((key) => ({...items[key], id: key}))
+  }
+
   const buyItem = (itemId, itemCost, plusClick) => {
-    final = (itemCost * (1.3 * itemQuantities[itemId] || 0) || itemCost);
+    final = itemCost * (1.3 * itemQuantities[itemId] || 0) || itemCost;
     if (coins >= final) {
       console.log(".");
       console.log("COMPROU O ITEM: " + itemId);
@@ -150,7 +158,34 @@ export default function App() {
       alert("Você não tem moedas suficientes para comprar este item!");
     }
   };
-
+  if (!fontLoaded) {
+    // Renderiza a tela de carregamento enquanto a fonte está sendo carregada
+    return (
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <LinearGradient
+          colors={["#242424", "#000"]}
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            width: "100%",
+            height: "100%",
+          }}
+        >
+          <ActivityIndicator size="large" color="red" />
+          <Text style={{ color: "white", fontWeight: "bold" }}>
+            Carregando...
+          </Text>
+        </LinearGradient>
+      </View>
+    );
+  }
   return (
     <View style={styles.container}>
       <Image source={Background} style={styles.backgroundImage} />
@@ -186,203 +221,34 @@ export default function App() {
             colors={["#5c0000", "#1c0000"]}
             style={styles.ModalHeader}
           >
-            <Text style={styles.textModalShop}>
+            <RNText style={styles.textModalShop}>
               {displayCoins} Evil Coins!
-            </Text>
+            </RNText>
             <TouchableOpacity onPress={closeModal} style={styles.close}>
               <Icon name="close" size={25} color="#000" />
             </TouchableOpacity>
           </LinearGradient>
           <ScrollView style={styles.scrollContainer}>
-            <TouchableOpacity>
-              <StoreItem
-                itemId="livro-das-moedas"
-                image={require("./assets/game_imgs/storeItems/coinBook.jpeg")}
-                title="Livro das Moedas"
-                initialCost={100}
-                coins={coins}
-                plusClick={0.3}
-                quantity={itemQuantities["livro-das-moedas"] || 0}
-                setCoins={setCoins}
-                buyItem={buyItem}
-              />
-            </TouchableOpacity>
+            {getItemsList().map((item) => (
+              <TouchableOpacity key={item.id}>
+                {/* {console.log(
+                  "Caminho da imagem completa:",
+                  itemData[itemId].image
+                )} */}
 
-            <TouchableOpacity>
-              <StoreItem
-                itemId="castelo"
-                image={require("./assets/game_imgs/storeItems/Castle.jpeg")}
-                title="Castelo"
-                initialCost={500}
-                coins={coins}
-                plusClick={0.5}
-                quantity={itemQuantities["castelo"] || 0}
-                setCoins={setCoins}
-                buyItem={(itemId, itemCost, plusClick) =>
-                  buyItem(itemId, itemCost, plusClick)
-                }
-              />
-            </TouchableOpacity>
-
-            <TouchableOpacity>
-              <StoreItem
-                itemId="o-colecionador"
-                image={require("./assets/game_imgs/storeItems/Collector.jpeg")}
-                title="O Colecionador"
-                initialCost={1000}
-                coins={coins}
-                plusClick={1}
-                quantity={itemQuantities["o-colecionador"] || 0}
-                setCoins={setCoins}
-                buyItem={(itemId, itemCost, plusClick) =>
-                  buyItem(itemId, itemCost, plusClick)
-                }
-              />
-            </TouchableOpacity>
-
-            <TouchableOpacity>
-              <StoreItem
-                itemId="deep-factory"
-                image={require("./assets/game_imgs/storeItems/DeeperFactory.jpeg")}
-                title="Fábrica das Profundezas"
-                initialCost={10000}
-                coins={coins}
-                plusClick={1}
-                quantity={itemQuantities["deep-factory"] || 0}
-                setCoins={setCoins}
-                buyItem={(itemId, itemCost, plusClick) =>
-                  buyItem(itemId, itemCost, plusClick)
-                }
-              />
-            </TouchableOpacity>
-
-            <TouchableOpacity>
-              <StoreItem
-                itemId="s-hell-factory"
-                image={require("./assets/game_imgs/storeItems/S-HellFactory.jpeg")}
-                title="Fábrica do Inferno P"
-                initialCost={50000}
-                coins={coins}
-                plusClick={1}
-                quantity={itemQuantities["s-hell-factory"] || 0}
-                setCoins={setCoins}
-                buyItem={(itemId, itemCost, plusClick) =>
-                  buyItem(itemId, itemCost, plusClick)
-                }
-              />
-            </TouchableOpacity>
-
-            <TouchableOpacity>
-              <StoreItem
-                itemId="m-hell-factory"
-                image={require("./assets/game_imgs/storeItems/M-HellFactory.jpeg")}
-                title="Fábrica do Inferno M"
-                initialCost={200000}
-                coins={coins}
-                plusClick={1}
-                quantity={itemQuantities["m-hell-factory"] || 0}
-                setCoins={setCoins}
-                buyItem={(itemId, itemCost, plusClick) =>
-                  buyItem(itemId, itemCost, plusClick)
-                }
-              />
-            </TouchableOpacity>
-
-            <TouchableOpacity>
-              <StoreItem
-                itemId="x-hell-factory"
-                image={require("./assets/game_imgs/storeItems/X-HellFactory.jpeg")}
-                title="Fábrica do Inferno G"
-                initialCost={500000}
-                coins={coins}
-                plusClick={1}
-                quantity={itemQuantities["x-hell-factory"] || 0}
-                setCoins={setCoins}
-                buyItem={(itemId, itemCost, plusClick) =>
-                  buyItem(itemId, itemCost, plusClick)
-                }
-              />
-            </TouchableOpacity>
-
-            <TouchableOpacity>
-              <StoreItem
-                itemId="dementador"
-                image={require("./assets/game_imgs/storeItems/Dementor.jpeg")}
-                title="Dementador"
-                initialCost={1000000}
-                coins={coins}
-                plusClick={1}
-                quantity={itemQuantities["dementador"] || 0}
-                setCoins={setCoins}
-                buyItem={(itemId, itemCost, plusClick) =>
-                  buyItem(itemId, itemCost, plusClick)
-                }
-              />
-            </TouchableOpacity>
-
-            <TouchableOpacity>
-              <StoreItem
-                itemId="guardian"
-                image={require("./assets/game_imgs/storeItems/Guardian.jpeg")}
-                title="Guardião"
-                initialCost={5000000}
-                coins={coins}
-                plusClick={1}
-                quantity={itemQuantities["guardian"] || 0}
-                setCoins={setCoins}
-                buyItem={(itemId, itemCost, plusClick) =>
-                  buyItem(itemId, itemCost, plusClick)
-                }
-              />
-            </TouchableOpacity>
-
-            <TouchableOpacity>
-              <StoreItem
-                itemId="hacker"
-                image={require("./assets/game_imgs/storeItems/Hacker.jpeg")}
-                title="Hacker do Inferno"
-                initialCost={30000000}
-                coins={coins}
-                plusClick={1}
-                quantity={itemQuantities["hacker"] || 0}
-                setCoins={setCoins}
-                buyItem={(itemId, itemCost, plusClick) =>
-                  buyItem(itemId, itemCost, plusClick)
-                }
-              />
-            </TouchableOpacity>
-
-            <TouchableOpacity>
-              <StoreItem
-                itemId="krampus"
-                image={require("./assets/game_imgs/storeItems/Krampus.jpeg")}
-                title="Krampus"
-                initialCost={70000000}
-                coins={coins}
-                plusClick={1}
-                quantity={itemQuantities["krampus"] || 0}
-                setCoins={setCoins}
-                buyItem={(itemId, itemCost, plusClick) =>
-                  buyItem(itemId, itemCost, plusClick)
-                }
-              />
-            </TouchableOpacity>
-
-            <TouchableOpacity>
-              <StoreItem
-                itemId="skelleton"
-                image={require("./assets/game_imgs/storeItems/Skelleton.jpeg")}
-                title="Morte das Moedas"
-                initialCost={70000000}
-                coins={coins}
-                plusClick={1}
-                quantity={itemQuantities["skelleton"] || 0}
-                setCoins={setCoins}
-                buyItem={(itemId, itemCost, plusClick) =>
-                  buyItem(itemId, itemCost, plusClick)
-                }
-              />
-            </TouchableOpacity>
+                <StoreItem
+                  itemId={item.id}
+                  image={item.image}
+                  title={item.title}
+                  initialCost={item.initialCost}
+                  coins={coins}
+                  plusClick={item.plusClick}
+                  quantity={itemQuantities[item.id] || 0}
+                  setCoins={setCoins}
+                  buyItem={() => buyItem(item.id, item.initialCost, item.plusClick)}
+                />
+              </TouchableOpacity>
+            ))}
             <View style={styles.marginEnd}></View>
           </ScrollView>
         </View>

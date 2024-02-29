@@ -1,21 +1,10 @@
 import React, { useEffect } from "react";
 import { View, Text, StyleSheet } from "react-native";
-import * as Font from 'expo-font';
 
 const Header = ({ coinse, coinsPS }) => {
   const formattedCoins =
     coinse % 1 === 0 ? coinse.toFixed(0) : coinse.toFixed(2);
   const displayCoins = parseFloat(formattedCoins).toString();
-
-  useEffect(() => {
-    async function loadFonts() {
-      await Font.loadAsync({
-        'ProtestRevolution-Regular': require('../assets/fonts/ProtestRevolution-Regular.ttf'),
-      });
-    }
-
-    loadFonts();
-  }, []);
 
   return (
     <View style={styles.container}>
