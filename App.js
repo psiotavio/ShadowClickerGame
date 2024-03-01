@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { Asset } from 'expo-asset';
+import { Asset } from "expo-asset";
 import { StatusBar } from "expo-status-bar";
-import { ProgressBar,MD3Colors } from "react-native-paper";
+import { ProgressBar, MD3Colors } from "react-native-paper";
 import {
   View,
   Modal,
@@ -27,10 +27,14 @@ import * as Font from "expo-font";
 import { getItems } from "./item";
 import Pack from "./components/Pack";
 import { getPacks } from "./pack";
+import { getCards } from "./card";
+
+import ModalCard from "./components/CardsModal";
+import Card from "./components/Card";
 
 export default function App() {
   const [modalVisible, setModalVisible] = useState(false);
-  const [CardsModalVisible, setCardsModalVisible] = useState(false);
+  const [PackModalVisible, setPackModalVisible] = useState(false);
   const [click, setClick] = useState(1.0);
   const [coins, setCoins] = useState(0.0);
   const [coinsPS, setCoinsPS] = useState(0.0);
@@ -43,6 +47,11 @@ export default function App() {
   const [flashVisible, setFlashVisible] = useState(false);
   const [animation] = useState(new Animated.Value(0));
   const [clickedPackColor, setClickedPackColor] = useState(null);
+
+  const [DeckModalVisible, setDeckModalVisible] = useState(false); // Estado para controlar a visibilidade do CardModal
+  const [cardModalVisible, setCardModalVisible] = useState(false); // Estado para controlar a visibilidade do CardModal
+  const [selectedCards, setSelectedCards] = useState([]); // Estado para armazenar as cartas sorteadas
+  const [cardsList, setCardsList] = useState([]);
 
   const handleFlashEffectWrapper = (color) => () => {
     handleFlashEffect(color);
@@ -72,7 +81,11 @@ export default function App() {
           duration: 1000,
           useNativeDriver: true,
         }),
-      ]).start(() => setFlashVisible(false));
+        Animated.delay(1500),
+      ]).start(() => {
+        setFlashVisible(false);
+        setCardModalVisible(true);
+      });
     }
   }, [flashVisible, animation]);
 
@@ -88,43 +101,45 @@ export default function App() {
     }
 
     loadFonts();
-    console.log("CARREGOU")
+    console.log("CARREGOU");
   }, []);
 
   useEffect(() => {
     async function loadAssets() {
       await new Promise((resolve) => setTimeout(resolve, 4000));
-  
+
+
       console.log("CARREGOU IMAGEM"),
-      await Asset.loadAsync([
-        require("./assets/game_imgs/backgroundGame.jpg"),
-        require("./assets/game_imgs/coin.png"),
-        require("./assets/game_imgs/itemStoreBKG.jpg"),
-        require("./assets/game_imgs/packStoreBKG.jpg"),
-        require("./assets/game_imgs/packCards/pack1.png"),
-        require("./assets/game_imgs/packCards/pack2.png"),
-        require("./assets/game_imgs/packCards/pack3.png"),
-        require("./assets/game_imgs/packCards/pack4.png"),
-        require("./assets/game_imgs/storeItems/Castle.jpeg"),
-        require("./assets/game_imgs/storeItems/coinBook.jpeg"),
-        require("./assets/game_imgs/storeItems/Collector.jpeg"),
-        require("./assets/game_imgs/storeItems/DeeperFactory.jpeg"),
-        require("./assets/game_imgs/storeItems/Dementor.jpeg"),
-        require("./assets/game_imgs/storeItems/Guardian.jpeg"),
-        require("./assets/game_imgs/storeItems/Hacker.jpeg"),
-        require("./assets/game_imgs/storeItems/Krampus.jpeg"),
-        require("./assets/game_imgs/storeItems/M-HellFactory.jpeg"),
-        require("./assets/game_imgs/storeItems/S-HellFactory.jpeg"),
-        require("./assets/game_imgs/storeItems/Skelleton.jpeg"),
-        require("./assets/game_imgs/storeItems/X-HellFactory.jpeg"),
-      ]);
-  
+        await Asset.loadAsync([
+          require("./assets/game_imgs/backgroundGame.jpg"),
+          require("./assets/game_imgs/coin.png"),
+          require("./assets/game_imgs/itemStoreBKG.jpg"),
+          require("./assets/game_imgs/packStoreBKG.jpg"),
+          require("./assets/game_imgs/packCards/pack1.png"),
+          require("./assets/game_imgs/packCards/pack2.png"),
+          require("./assets/game_imgs/packCards/pack3.png"),
+          require("./assets/game_imgs/packCards/pack4.png"),
+          require("./assets/game_imgs/storeItems/Castle.jpeg"),
+          require("./assets/game_imgs/storeItems/coinBook.jpeg"),
+          require("./assets/game_imgs/storeItems/Collector.jpeg"),
+          require("./assets/game_imgs/storeItems/DeeperFactory.jpeg"),
+          require("./assets/game_imgs/storeItems/Dementor.jpeg"),
+          require("./assets/game_imgs/storeItems/Guardian.jpeg"),
+          require("./assets/game_imgs/storeItems/Hacker.jpeg"),
+          require("./assets/game_imgs/storeItems/Krampus.jpeg"),
+          require("./assets/game_imgs/storeItems/M-HellFactory.jpeg"),
+          require("./assets/game_imgs/storeItems/S-HellFactory.jpeg"),
+          require("./assets/game_imgs/storeItems/Skelleton.jpeg"),
+          require("./assets/game_imgs/storeItems/X-HellFactory.jpeg"),
+        ]);
+
       setAssetLoaded(true);
+      const cardsList = getCardsList();
+      setCards(cardsList);
     }
-  
+
     loadAssets();
   }, []);
-  
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -194,6 +209,7 @@ export default function App() {
     setCoins(0.0); // Reinicia para 0.0
     setClick(1); // Reinicia para 1.0
     setItemQuantities({}); // Reinicia para um objeto vazio
+    setCardsList(cardsList.map((card) => ({ ...card, owned: false }))); // Define todas as cartas como 'owned = false'
     console.log("!! RESETOU TUDO !!");
   };
 
@@ -210,12 +226,20 @@ export default function App() {
     setModalVisible(false);
   };
 
-  const openCardsModal = () => {
-    setCardsModalVisible(true);
+  const openPacksModal = () => {
+    setPackModalVisible(true);
   };
 
-  const cardsModalClose = () => {
-    setCardsModalVisible(false);
+  const packsModalClose = () => {
+    setPackModalVisible(false);
+  };
+
+  const openDeckModal = () => {
+    setDeckModalVisible(true);
+  };
+
+  const DeckModalClose = () => {
+    setDeckModalVisible(false);
   };
 
   // const addClick = (value) => {
@@ -229,6 +253,14 @@ export default function App() {
   function getPacksList() {
     const packs = getPacks();
     return Object.keys(packs).map((key) => ({ ...packs[key], id: key }));
+  }
+  function getCardsList() {
+    const cards = getCards();
+    return Object.keys(cards).map((key) => ({ ...cards[key], id: key }));
+  }
+
+  function setCards(newList) {
+    setCardsList(newList);
   }
 
   const buyItem = (itemId, itemCost, plusClick) => {
@@ -251,7 +283,20 @@ export default function App() {
     }
   };
 
-  const buyPack = (itemId, itemCost) => {
+  // Função para sortear cartas
+  function shuffle(array) {
+    const shuffledArray = array.slice(); // Copiando o array para não modificar o original
+    for (let i = shuffledArray.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffledArray[i], shuffledArray[j]] = [
+        shuffledArray[j],
+        shuffledArray[i],
+      ];
+    }
+    return shuffledArray;
+  }
+
+  const buyPack = (itemId, itemCost, numberOfCards) => {
     if (coins >= itemCost) {
       console.log(".");
       console.log("COMPROU O ITEM: " + itemId);
@@ -259,6 +304,32 @@ export default function App() {
       console.log(".");
       setCoins(coins - itemCost);
       handleFlashEffect(); // Chama o efeito de flash após a compra bem-sucedida
+
+      // Sortear as cartas ao comprar o pacote
+      const cards = getCardsList();
+      const allCards = Object.values(cards);
+      const shuffledCards = shuffle(allCards);
+      const selectedCards = shuffledCards.slice(0, numberOfCards);
+
+      // Atualizar as cartas na lista para 'owned = true'
+      const updatedCardList = cards.map((card) => {
+        if (selectedCards.some((selectedCard) => selectedCard.id === card.id)) {
+          console.log("tem true");
+          return {
+            ...card,
+            owned: true,
+          };
+        } else {
+          return card;
+        }
+      });
+
+      // Atualizar o estado das cartas
+      setCardsList(updatedCardList);
+      setSelectedCards(selectedCards);
+
+      // Aqui você pode fazer algo com as cartas selecionadas, como exibir para o jogador
+      console.log("Cartas selecionadas:", selectedCards);
     } else {
       alert("Você não tem moedas suficientes para comprar este item!");
     }
@@ -284,11 +355,20 @@ export default function App() {
             height: "100%",
           }}
         >
-          <ProgressBar progress={0.9} color={MD3Colors.error50} style={{ height: 7, width: 250, borderRadius: 10, marginBottom:20 }} />
+          <ProgressBar
+            progress={0.9}
+            color={MD3Colors.error50}
+            style={{
+              height: 7,
+              width: 250,
+              borderRadius: 10,
+              marginBottom: 20,
+            }}
+          />
 
-            <Text style={{ color: "white", fontWeight: "bold" }}>
-              Carregando...
-            </Text>
+          <Text style={{ color: "white", fontWeight: "bold" }}>
+            Carregando...
+          </Text>
         </LinearGradient>
       </View>
     );
@@ -313,10 +393,16 @@ export default function App() {
           <Icon name="shopping-bag" size={60} color="#f2f2f2" />
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={openCardsModal}>
+        <TouchableOpacity onPress={openPacksModal}>
+          <Icon name="shopping-cart" size={60} color="#f2f2f2" />
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={openDeckModal}>
           <Icon name="shopping-cart" size={60} color="#f2f2f2" />
         </TouchableOpacity>
       </View>
+
+      {/* MODAL DE LOJA  */}
 
       <Modal
         animationType="slide"
@@ -365,13 +451,13 @@ export default function App() {
         </View>
       </Modal>
 
-      {/* MODAL DE CARTAS  */}
+      {/* MODAL DOS PACOTES  */}
 
       <Modal
         animationType="slide"
         transparent={true}
-        visible={CardsModalVisible}
-        onRequestClose={cardsModalClose}
+        visible={PackModalVisible}
+        onRequestClose={packsModalClose}
       >
         {flashVisible && (
           <Animated.View
@@ -395,7 +481,7 @@ export default function App() {
             <RNText style={styles.textModalShop}>
               {displayCoins} Evil Coins!
             </RNText>
-            <TouchableOpacity onPress={cardsModalClose} style={styles.close}>
+            <TouchableOpacity onPress={packsModalClose} style={styles.close}>
               <Icon name="close" size={25} color="#000" />
             </TouchableOpacity>
           </LinearGradient>
@@ -419,11 +505,71 @@ export default function App() {
                           buyPack(
                             pack.id,
                             pack.initialCost,
-                            pack.plusClick,
+                            pack.numberOfCards,
                             setClickedPackColor(pack.color)
                           )
                         }
                       />
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              <View style={styles.marginEnd}></View>
+            </ImageBackground>
+          </ScrollView>
+          <ModalCard
+            visible={cardModalVisible}
+            onClose={() => setCardModalVisible(false)}
+            cards={selectedCards}
+          />
+        </View>
+      </Modal>
+
+      {/* MODAL DAS CARTAS  */}
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={DeckModalVisible}
+        onRequestClose={DeckModalClose}
+      >
+        <View style={styles.modalContainer}>
+          <LinearGradient
+            colors={["#303030", "#000"]}
+            style={styles.ModalHeader}
+          >
+            <RNText style={styles.textModalShop}>
+              {displayCoins} Evil Coins!
+            </RNText>
+            <TouchableOpacity onPress={DeckModalClose} style={styles.close}>
+              <Icon name="close" size={25} color="#000" />
+            </TouchableOpacity>
+          </LinearGradient>
+          <ScrollView style={styles.scrollContainerCards}>
+            <ImageBackground
+              source={BackgroundStorePacks}
+              resizeMode="cover"
+              style={styles.BackgroundStores}
+            >
+              <View style={styles.CardsSection}>
+                {cardsList.map((card) => {
+                  const opacity = card.owned ? 1 : 0.5;
+                  console.log("TEM: ", card.id, card.owned);
+
+                  return (
+                    <TouchableOpacity key={card.id}>
+                      <View style={{ opacity: opacity }}>
+                        <Card
+                          itemId={card.id}
+                          image={card.image}
+                          title={card.title}
+                          owned={card.owned}
+                          style={styles.cardStyle}
+                          cardSize={styles.cardSize}
+                          styleFont={styles.styleFont}
+                        />
+                      </View>
                     </TouchableOpacity>
                   );
                 })}
@@ -531,6 +677,26 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     width: "100%",
   },
+  CardsSection: {
+    display: "flex",
+    justifyContent: "center",
+    flexDirection: "row",
+    flexWrap: "wrap",
+    width: "100%",
+  },
+  cardSize:{
+     width: 110,
+     height:190,
+
+  },
+  styleFont:{
+    fontSize: 20 
+
+  },
+  cardStyle:{
+    width: 130,
+  },
+
   scrollContainerCards: {
     width: "100%",
     maxHeight: "100%",
