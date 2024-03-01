@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Asset } from 'expo-asset';
 import { StatusBar } from "expo-status-bar";
 import { ProgressBar,MD3Colors } from "react-native-paper";
 import {
@@ -7,7 +8,6 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
-  ActivityIndicator,
   Image,
   Text as RNText,
   Text,
@@ -39,6 +39,7 @@ export default function App() {
   const displayCoins = parseFloat(formattedCoins).toString();
 
   const [fontLoaded, setFontLoaded] = useState(false);
+  const [assetLoaded, setAssetLoaded] = useState(false);
   const [flashVisible, setFlashVisible] = useState(false);
   const [animation] = useState(new Animated.Value(0));
   const [clickedPackColor, setClickedPackColor] = useState(null);
@@ -87,7 +88,43 @@ export default function App() {
     }
 
     loadFonts();
+    console.log("CARREGOU")
   }, []);
+
+  useEffect(() => {
+    async function loadAssets() {
+      await new Promise((resolve) => setTimeout(resolve, 4000));
+  
+      console.log("CARREGOU IMAGEM"),
+      await Asset.loadAsync([
+        require("./assets/game_imgs/backgroundGame.jpg"),
+        require("./assets/game_imgs/coin.png"),
+        require("./assets/game_imgs/itemStoreBKG.jpg"),
+        require("./assets/game_imgs/packStoreBKG.jpg"),
+        require("./assets/game_imgs/packCards/pack1.png"),
+        require("./assets/game_imgs/packCards/pack2.png"),
+        require("./assets/game_imgs/packCards/pack3.png"),
+        require("./assets/game_imgs/packCards/pack4.png"),
+        require("./assets/game_imgs/storeItems/Castle.jpeg"),
+        require("./assets/game_imgs/storeItems/coinBook.jpeg"),
+        require("./assets/game_imgs/storeItems/Collector.jpeg"),
+        require("./assets/game_imgs/storeItems/DeeperFactory.jpeg"),
+        require("./assets/game_imgs/storeItems/Dementor.jpeg"),
+        require("./assets/game_imgs/storeItems/Guardian.jpeg"),
+        require("./assets/game_imgs/storeItems/Hacker.jpeg"),
+        require("./assets/game_imgs/storeItems/Krampus.jpeg"),
+        require("./assets/game_imgs/storeItems/M-HellFactory.jpeg"),
+        require("./assets/game_imgs/storeItems/S-HellFactory.jpeg"),
+        require("./assets/game_imgs/storeItems/Skelleton.jpeg"),
+        require("./assets/game_imgs/storeItems/X-HellFactory.jpeg"),
+      ]);
+  
+      setAssetLoaded(true);
+    }
+  
+    loadAssets();
+  }, []);
+  
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -227,7 +264,7 @@ export default function App() {
     }
   };
 
-  if (!fontLoaded) {
+  if (!fontLoaded && !assetLoaded) {
     // Renderiza a tela de carregamento enquanto a fonte está sendo carregada
     return (
       <View
