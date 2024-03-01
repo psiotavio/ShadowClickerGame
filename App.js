@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { StatusBar } from "expo-status-bar";
+import { ProgressBar,MD3Colors } from "react-native-paper";
 import {
   View,
   Modal,
@@ -10,8 +11,12 @@ import {
   Image,
   Text as RNText,
   Text,
+  Animated,
+  ImageBackground,
 } from "react-native";
 import Background from "./assets/game_imgs/backgroundGame.jpg";
+import BackgroundStoreCoin from "./assets/game_imgs/itemStoreBKG.jpg";
+import BackgroundStorePacks from "./assets/game_imgs/packStoreBKG.jpg";
 import Coin from "./components/Coin";
 import Header from "./components/Header";
 import Icon from "react-native-vector-icons/FontAwesome";
@@ -19,10 +24,9 @@ import StoreItem from "./components/StoreItems";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Font from "expo-font";
-import { getItems } from "./getObjects/item";
+import { getItems } from "./item";
 import Pack from "./components/Pack";
-import { getPacks } from "./getObjects/pack";
-
+import { getPacks } from "./pack";
 
 export default function App() {
   const [modalVisible, setModalVisible] = useState(false);
@@ -35,6 +39,41 @@ export default function App() {
   const displayCoins = parseFloat(formattedCoins).toString();
 
   const [fontLoaded, setFontLoaded] = useState(false);
+  const [flashVisible, setFlashVisible] = useState(false);
+  const [animation] = useState(new Animated.Value(0));
+  const [clickedPackColor, setClickedPackColor] = useState(null);
+
+  const handleFlashEffectWrapper = (color) => () => {
+    handleFlashEffect(color);
+  };
+
+  const handleFlashEffect = () => {
+    console.log("Flash acionado!", clickedPackColor);
+    setFlashVisible(true);
+    console.log("setFlashVisible(true) chamado");
+    setTimeout(() => {
+      setFlashVisible(false);
+      console.log("setFlashVisible(false) chamado");
+    }, 4000);
+  };
+
+  useEffect(() => {
+    if (flashVisible) {
+      Animated.sequence([
+        Animated.timing(animation, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        Animated.delay(2000),
+        Animated.timing(animation, {
+          toValue: 0,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+      ]).start(() => setFlashVisible(false));
+    }
+  }, [flashVisible, animation]);
 
   useEffect(() => {
     async function loadFonts() {
@@ -138,7 +177,7 @@ export default function App() {
     setCardsModalVisible(true);
   };
 
-  const carsModalClose = () => {
+  const cardsModalClose = () => {
     setCardsModalVisible(false);
   };
 
@@ -147,8 +186,12 @@ export default function App() {
   // };
 
   function getItemsList() {
-    const items = getItems()
-    return Object.keys(items).map((key) => ({...items[key], id: key}))
+    const items = getItems();
+    return Object.keys(items).map((key) => ({ ...items[key], id: key }));
+  }
+  function getPacksList() {
+    const packs = getPacks();
+    return Object.keys(packs).map((key) => ({ ...packs[key], id: key }));
   }
 
   const buyItem = (itemId, itemCost, plusClick) => {
@@ -170,6 +213,20 @@ export default function App() {
       alert("Você não tem moedas suficientes para comprar este item!");
     }
   };
+
+  const buyPack = (itemId, itemCost) => {
+    if (coins >= itemCost) {
+      console.log(".");
+      console.log("COMPROU O ITEM: " + itemId);
+      console.log("QUE CUSTA: " + itemCost);
+      console.log(".");
+      setCoins(coins - itemCost);
+      handleFlashEffect(); // Chama o efeito de flash após a compra bem-sucedida
+    } else {
+      alert("Você não tem moedas suficientes para comprar este item!");
+    }
+  };
+
   if (!fontLoaded) {
     // Renderiza a tela de carregamento enquanto a fonte está sendo carregada
     return (
@@ -190,14 +247,16 @@ export default function App() {
             height: "100%",
           }}
         >
-          <ActivityIndicator size="large" color="red" />
-          <Text style={{ color: "white", fontWeight: "bold" }}>
-            Carregando...
-          </Text>
+          <ProgressBar progress={0.9} color={MD3Colors.error50} style={{ height: 7, width: 250, borderRadius: 10, marginBottom:20 }} />
+
+            <Text style={{ color: "white", fontWeight: "bold" }}>
+              Carregando...
+            </Text>
         </LinearGradient>
       </View>
     );
   }
+
   return (
     <View style={styles.container}>
       <Image source={Background} style={styles.backgroundImage} />
@@ -241,72 +300,100 @@ export default function App() {
             </TouchableOpacity>
           </LinearGradient>
           <ScrollView style={styles.scrollContainer}>
-            {getItemsList().map((item) => (
-              <TouchableOpacity key={item.id}>
-                {/* {console.log(
-                  "Caminho da imagem completa:",
-                  itemData[itemId].image
-                )} */}
-
-                <StoreItem
-                  itemId={item.id}
-                  image={item.image}
-                  title={item.title}
-                  initialCost={item.initialCost}
-                  coins={coins}
-                  plusClick={item.plusClick}
-                  quantity={itemQuantities[item.id] || 0}
-                  setCoins={setCoins}
-                  buyItem={() => buyItem(item.id, item.initialCost, item.plusClick)}
-                />
-              </TouchableOpacity>
-            ))}
-            <View style={styles.marginEnd}></View>
+            <ImageBackground
+              source={BackgroundStoreCoin}
+              resizeMode="cover"
+              style={styles.BackgroundStores}
+            >
+              {getItemsList().map((item) => (
+                <TouchableOpacity key={item.id}>
+                  <StoreItem
+                    itemId={item.id}
+                    image={item.image}
+                    title={item.title}
+                    initialCost={item.initialCost}
+                    coins={coins}
+                    plusClick={item.plusClick}
+                    quantity={itemQuantities[item.id] || 0}
+                    setCoins={setCoins}
+                    buyItem={() =>
+                      buyItem(item.id, item.initialCost, item.plusClick)
+                    }
+                  />
+                </TouchableOpacity>
+              ))}
+              <View style={styles.marginEnd}></View>
+            </ImageBackground>
           </ScrollView>
         </View>
       </Modal>
 
+      {/* MODAL DE CARTAS  */}
 
       <Modal
         animationType="slide"
         transparent={true}
-        visible={carsModal}
-        onRequestClose={carsModalClose}
+        visible={CardsModalVisible}
+        onRequestClose={cardsModalClose}
       >
+        {flashVisible && (
+          <Animated.View
+            style={[
+              StyleSheet.absoluteFill,
+              {
+                display: "flex",
+                zIndex: 999,
+                backgroundColor: clickedPackColor,
+                opacity: animation,
+              },
+            ]}
+          />
+        )}
+
         <View style={styles.modalContainer}>
           <LinearGradient
-            colors={["#5c0000", "#1c0000"]}
+            colors={["#303030", "#000"]}
             style={styles.ModalHeader}
           >
             <RNText style={styles.textModalShop}>
               {displayCoins} Evil Coins!
             </RNText>
-            <TouchableOpacity onPress={carsModalClose} style={styles.close}>
+            <TouchableOpacity onPress={cardsModalClose} style={styles.close}>
               <Icon name="close" size={25} color="#000" />
             </TouchableOpacity>
           </LinearGradient>
-          <ScrollView style={styles.scrollContainer}>
-            {getItemsList().map((item) => (
-              <TouchableOpacity key={item.id}>
-                {/* {console.log(
-                  "Caminho da imagem completa:",
-                  itemData[itemId].image
-                )} */}
+          <ScrollView style={styles.scrollContainerCards}>
+            <ImageBackground
+              source={BackgroundStorePacks}
+              resizeMode="cover"
+              style={styles.BackgroundStores}
+            >
+              <View style={styles.PacksSection}>
+                {getPacksList().map((pack) => {
+                  return (
+                    <TouchableOpacity key={pack.id} onPress={handleFlashEffect}>
+                      <Pack
+                        itemId={pack.id}
+                        image={pack.image}
+                        title={pack.title}
+                        initialCost={pack.initialCost}
+                        plusClick={0}
+                        buyPack={() =>
+                          buyPack(
+                            pack.id,
+                            pack.initialCost,
+                            pack.plusClick,
+                            setClickedPackColor(pack.color)
+                          )
+                        }
+                      />
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
 
-                <StoreItem
-                  itemId={item.id}
-                  image={item.image}
-                  title={item.title}
-                  initialCost={item.initialCost}
-                  coins={coins}
-                  plusClick={item.plusClick}
-                  quantity={itemQuantities[item.id] || 0}
-                  setCoins={setCoins}
-                  buyItem={() => buyItem(item.id, item.initialCost, item.plusClick)}
-                />
-              </TouchableOpacity>
-            ))}
-            <View style={styles.marginEnd}></View>
+              <View style={styles.marginEnd}></View>
+            </ImageBackground>
           </ScrollView>
         </View>
       </Modal>
@@ -359,8 +446,11 @@ const styles = StyleSheet.create({
   scrollContainer: {
     width: "100%",
     maxHeight: "100%",
-    backgroundColor: "#4c0000",
-    padding: 15,
+    backgroundColor: "#360000",
+  },
+  BackgroundStores: {
+    paddingHorizontal: 15,
+    paddingVertical: 80,
   },
   close: {
     opacity: 0.7,
@@ -394,6 +484,19 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   marginEnd: {
-    paddingBottom: 40,
+    paddingBottom: 50,
+  },
+  PacksSection: {
+    display: "flex",
+    justifyContent: "center",
+    gap: 20,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    width: "100%",
+  },
+  scrollContainerCards: {
+    width: "100%",
+    maxHeight: "100%",
+    backgroundColor: "#272727",
   },
 });

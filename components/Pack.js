@@ -14,9 +14,8 @@ const Pack = ({
   title,
   initialCost,
   plusClick,
-  buyItem,
+  buyPack,
   itemId,
-  quantity,
 }) => {
   const [isTablet, setIsTablet] = useState(false);
 
@@ -28,7 +27,7 @@ const Pack = ({
 
   return (
     <TouchableOpacity
-      onPress={() => buyItem(itemId, initialCost, plusClick)}
+      onPress={() => buyPack(itemId, initialCost, plusClick)}
       style={[styles.itemBuy, isTablet && styles.itemBuyTablet]}
     >
       <View style={styles.container}>
@@ -36,94 +35,51 @@ const Pack = ({
           source={image}
           style={[styles.image, isTablet && styles.imageTablet]}
         />
+        <Text style={styles.title}>{title}</Text>
+        <Text style={styles.cost}>11,99$</Text>
+        <Text style={styles.cost}>{initialCost}</Text>
       </View>
     </TouchableOpacity>
   );
 };
 
-StoreItem.propTypes = {
-  image: PropTypes.number.isRequired,
-  title: PropTypes.string.isRequired,
-  initialCost: PropTypes.number.isRequired,
-  coins: PropTypes.number.isRequired,
-  setCoins: PropTypes.func.isRequired,
-};
-
 const styles = StyleSheet.create({
-  coin: {
-    width: 25,
-    height: 25,
-    objectFit: "contain",
-  },
-  custo: {
-    flexDirection: "row",
-    gap: 10,
-  },
   itemBuy: {
-    backgroundColor: "#0c0c0c",
-    marginBottom: 15,
-    borderRadius: 10,
+    marginBottom: 20,
   },
   itemBuyTablet: {
-    marginBottom: 20,
-    backgroundColor: "#0c0c0c",
+    marginBottom: 25,
   },
   container: {
-    flexDirection: "row",
+    flexDirection: "column",
     alignItems: "center",
   },
   image: {
-    width: 80,
-    height: 80,
+    objectFit: "contain",
+    width: 170,
+    height: 220,
     marginRight: 3,
-    borderTopLeftRadius: 10,
-    borderBottomLeftRadius: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 5 },
+    shadowRadius: 5,
+    shadowOpacity:1,
   },
   imageTablet: {
-    width: 140,
-    height: 140,
-  },
-  details: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginRight: 20,
-    padding: 10,
-  },
-  detailsTablet: {
-    marginRight: 50,
+    width: "50%",
+    height: 240,
   },
   title: {
-    fontSize: 21,
+    fontSize: 27,
     fontWeight: "bold",
     color: "#f2f2f2",
     fontFamily: "ProtestRevolution-Regular",
   },
   cost: {
     fontFamily: "ProtestRevolution-Regular",
-    fontSize: 16,
+    fontSize: 20,
     marginTop: 5,
     color: "#f2f2f2",
     fontWeight: "bold",
-  },
-  quantity: {
-    fontFamily: "ProtestRevolution-Regular",
-    fontSize: 16,
-    color: "#f2f2f2",
-    fontWeight: "bold",
-  },
-  buySection: {
-    alignSelf: "flex-end",
-    paddingLeft: 15,
-    paddingRight: 15,
-    alignItems: "center",
-  },
-  detailsAndBuy: {
-    flexDirection: "column",
-    flex: 1,
-  },
-  twoSide: {
-    flexDirection: "column",
-    gap: 10,
   },
 });
 
