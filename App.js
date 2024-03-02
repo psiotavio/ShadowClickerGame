@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Audio } from 'expo-av';
+import { Audio } from "expo-av";
 import { Asset } from "expo-asset";
 import { StatusBar } from "expo-status-bar";
 import { ProgressBar, MD3Colors } from "react-native-paper";
@@ -22,7 +22,6 @@ import BackgroundStorePacks from "./assets/game_imgs/packStoreBKG.jpg";
 import Coin from "./components/Coin";
 import Header from "./components/Header";
 import Icon from "react-native-vector-icons/FontAwesome";
-import StoreItem from "./components/StoreItems";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Font from "expo-font";
@@ -31,6 +30,8 @@ import Pack from "./components/Pack";
 import CardSlot from "./components/CardSlot";
 import { getPacks } from "./pack";
 import { getCards } from "./card";
+import StoreItem from "./components/StoreItems";
+import StoreItemClick from "./components/StoreItemClick";
 
 import ModalCard from "./components/CardsModal";
 import Card from "./components/Card";
@@ -47,63 +48,37 @@ export default function App() {
   const formattedCoins = coins % 1 === 0 ? coins.toFixed(0) : coins.toFixed(2);
   const displayCoins = parseFloat(formattedCoins).toString();
 
-
   const [fontLoaded, setFontLoaded] = useState(false);
   const [assetLoaded, setAssetLoaded] = useState(false);
   const [flashVisible, setFlashVisible] = useState(false);
   const [animation] = useState(new Animated.Value(0));
   const [clickedPackColor, setClickedPackColor] = useState(null);
 
-  const [DeckModalVisible, setDeckModalVisible] = useState(false); // Estado para controlar a visibilidade do CardModal
-  const [cardModalVisible, setCardModalVisible] = useState(false); // Estado para controlar a visibilidade do CardModal
-  const [selectedCards, setSelectedCards] = useState([]); // Estado para armazenar as cartas sorteadas
+  const [DeckModalVisible, setDeckModalVisible] = useState(false);
+  const [cardModalVisible, setCardModalVisible] = useState(false);
+  const [selectedCards, setSelectedCards] = useState([]);
   const [cardsList, setCardsList] = useState([]);
 
-
-  const [slots, setSlots] = useState(Array(3).fill(null)); // Inicializa os slots como vazios
-
-  // const putCard = (card) => {
-  //   // Verifica se o cartão já está presente em algum slot
-  //   const isCardAlreadyInSlot = slots.includes(card);
-  //   console.log("Cartão já está em um slot?", isCardAlreadyInSlot);
-
-  //   // Encontra o primeiro slot vazio
-  //   const emptySlotIndex = slots.findIndex((slot) => slot === null);
-  //   console.log("Índice do primeiro slot vazio:", emptySlotIndex);
-
-  //   // Verifica se o usuário possui a carta e se o slot está vazio
-  //   if (card && card.owned && emptySlotIndex !== -1) {
-  //     const updatedSlots = [...slots];
-  //     updatedSlots[emptySlotIndex] = card;
-  //     setSlots(updatedSlots);
-  //     console.log("Cartão adicionado ao slot");
-  //   } else {
-  //     // Caso contrário, exibe uma mensagem de alerta
-  //     alert("Você não possui essa carta ainda. Compre mais pacotes na loja.");
-  //   }
-  // };
+  const [slots, setSlots] = useState(Array(3).fill(null));
 
   const [selectedCard, setSelectedCard] = useState(null);
 
   const handleCardPress = (card) => {
     console.log(card.owned);
     if (card.owned == true) {
-      setPowerUp(card.multiplicador); // Atualize o estado de powerUp
+      setPowerUp(card.multiplicador);
       console.log("MULTIPLICADOR: ", card.multiplicador, powerUp);
       Alert.alert("Tinha essa carta");
       setCoinsPSBefore(coinsPS);
-      setCoinsPS(coinsPS * card.multiplicador); // Use card.multiplicador diretamente
-      setSelectedCard(card);
+      setCoinsPS(coinsPS * card.multiplicador);
     } else {
       Alert.alert("Compra mais cartas trouxinha");
     }
-
   };
-  
 
   const handleSlotPress = () => {
     setCoinsPS(coinsPSbefore);
-    setPowerUp(1.0)
+    setPowerUp(1.0);
     setSelectedCard(null);
   };
 
@@ -184,8 +159,8 @@ export default function App() {
           require("./assets/game_imgs/storeItems/S-HellFactory.jpeg"),
           require("./assets/game_imgs/storeItems/Skelleton.jpeg"),
           require("./assets/game_imgs/storeItems/X-HellFactory.jpeg"),
+
           require("./assets/game_imgs/cards/AlterEgo.png"),
-          
           require("./assets/game_imgs/cards/Blood Marry.png"),
           require("./assets/game_imgs/cards/Blood Witch.png"),
           require("./assets/game_imgs/cards/BloodPrinces.png"),
@@ -193,71 +168,31 @@ export default function App() {
           require("./assets/game_imgs/cards/Drakula.png"),
           require("./assets/game_imgs/cards/Red Witch.png"),
           require("./assets/game_imgs/cards/Subman.png"),
-          require("./assets/game_imgs/cards/Vampyra.png")
+          require("./assets/game_imgs/cards/Vampyra.png"),
         ]);
-        console.log("VOU FAZER UMA MERDINHA AQUI ");
+      console.log("VOU FAZER UMA MERDINHA AQUI ");
 
-        // Aqui você pode incluir a lógica para carregar e reproduzir o áudio
-        const soundObject = new Audio.Sound();
-    
-        try {
-          // Carregar o arquivo de áudio
-          await soundObject.loadAsync(require("./assets/sounds/gameMusic.mp3"));
-    
-          // Definir loop para true para reprodução em loop
-          await soundObject.setIsLoopingAsync(true);
+      const soundObject = new Audio.Sound();
 
-          await soundObject.setVolumeAsync(0.2);
-    
-          // Iniciar a reprodução do áudio
-          await soundObject.playAsync();
-        } catch (error) {
-          console.log('Erro ao reproduzir o áudio:', error);
-        }
-    
-        // Chame a função para carregar as cartas depois de carregar as imagens e o áudio
-        getCards();
-    
-        // Indique que todos os ativos foram carregados
-        setAssetLoaded(true);
+      try {
+        await soundObject.loadAsync(require("./assets/sounds/gameMusic.mp3"));
+
+        await soundObject.setIsLoopingAsync(true);
+
+        await soundObject.setVolumeAsync(0.2);
+
+        await soundObject.playAsync();
+      } catch (error) {
+        console.log("Erro ao reproduzir o áudio:", error);
+      }
+
+      getCards();
+
+      setAssetLoaded(true);
     }
 
     loadAssets();
   }, []);
-
-
-  // useEffect(() => {
-  //   // Função para carregar e reproduzir o áudio
-  //   async function playSound() {
-  //     const soundObject = new Audio.Sound();
-
-  //     try {
-  //       // Carregar o arquivo de áudio
-  //       await soundObject.loadAsync(require('./assets/sounds/gameMusic.mp3'));
-
-  //       // Definir loop para true para reprodução em loop
-  //       await soundObject.setIsLoopingAsync(true);
-
-  
-
-  //       // Iniciar a reprodução do áudio
-  //       await soundObject.playAsync();
-  //     } catch (error) {
-  //       console.log('Erro ao reproduzir o áudio:', error);
-  //     }
-  //   }
-
-  //   // Chamar a função para reproduzir o áudio quando o componente for montado
-  //   playSound();
-
-  //   // Retornar uma função de limpeza para interromper a reprodução ao desmontar o componente
-  //   return () => {
-  //     soundObject.stopAsync();
-  //     soundObject.unloadAsync();
-  //   };
-  // }, []); // Executar o efeito apenas uma vez, passando um array vazio como segundo argumento
-
-  
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -273,7 +208,16 @@ export default function App() {
 
   useEffect(() => {
     saveGameState();
-  }, [click, coins, coinsPS, itemQuantities, cardsList, selectedCard, coinsPSbefore, powerUp]);
+  }, [
+    click,
+    coins,
+    coinsPS,
+    itemQuantities,
+    cardsList,
+    selectedCard,
+    coinsPSbefore,
+    powerUp,
+  ]);
 
   const loadGameState = async () => {
     try {
@@ -282,11 +226,10 @@ export default function App() {
       const savedCoinsPS = await AsyncStorage.getItem("coinsPS");
       const savedCoinsPSBefore = await AsyncStorage.getItem("coinsPSbefore");
       const savedItemQuantities = await AsyncStorage.getItem("itemQuantities");
-      const savedCardsList = await AsyncStorage.getItem("cardsList"); 
+      const savedCardsList = await AsyncStorage.getItem("cardsList");
       const savedSelectedCard = await AsyncStorage.getItem("selectedCard");
       const savedPowerUp = await AsyncStorage.getItem("powerUp");
-      
-  
+
       if (savedClick !== null) {
         setClick(parseFloat(savedClick));
       }
@@ -299,47 +242,45 @@ export default function App() {
       if (savedCoinsPSBefore !== null) {
         setCoinsPSBefore(parseFloat(savedCoinsPSBefore));
       }
-  
+
       if (savedItemQuantities !== null) {
         setItemQuantities(JSON.parse(savedItemQuantities));
       }
-  
+
       if (savedCardsList !== null) {
-        setCardsList(JSON.parse(savedCardsList)); // Alterado para definir a lista de cartas em cache
+        setCardsList(JSON.parse(savedCardsList));
       }
-      
+
       if (savedSelectedCard !== null) {
         setSelectedCard(JSON.parse(savedSelectedCard));
       }
       if (savedPowerUp !== null) {
-        console.log("DEU CERTO O CARREGAMENTO", savedPowerUp)
+        console.log("DEU CERTO O CARREGAMENTO", savedPowerUp);
         setPowerUp(parseFloat(savedPowerUp));
       }
     } catch (error) {
       console.error("Erro ao carregar dados do AsyncStorage: ", error);
     }
   };
-  
-  
- 
-const saveGameState = async () => {
-  try {
-    await AsyncStorage.setItem("click", click.toString());
-    await AsyncStorage.setItem("coins", coins.toString());
-    await AsyncStorage.setItem("coinsPS", coinsPS.toString());
-    await AsyncStorage.setItem("powerUp", powerUp.toString());
-    console.log("SALVOU ESSe power:", powerUp); 
-    await AsyncStorage.setItem("coinsPSbefore", coinsPSbefore.toString());
-    await AsyncStorage.setItem("itemQuantities", JSON.stringify(itemQuantities));
-    await AsyncStorage.setItem("cardsList", JSON.stringify(cardsList));
-    await AsyncStorage.setItem("selectedCard", JSON.stringify(selectedCard));
 
-  } catch (error) {
-    console.error("Erro ao salvar dados no AsyncStorage: ", error);
-  }
-};
-
-
+  const saveGameState = async () => {
+    try {
+      await AsyncStorage.setItem("click", click.toString());
+      await AsyncStorage.setItem("coins", coins.toString());
+      await AsyncStorage.setItem("coinsPS", coinsPS.toString());
+      await AsyncStorage.setItem("powerUp", powerUp.toString());
+      console.log("SALVOU ESSe power:", powerUp);
+      await AsyncStorage.setItem("coinsPSbefore", coinsPSbefore.toString());
+      await AsyncStorage.setItem(
+        "itemQuantities",
+        JSON.stringify(itemQuantities)
+      );
+      await AsyncStorage.setItem("cardsList", JSON.stringify(cardsList));
+      await AsyncStorage.setItem("selectedCard", JSON.stringify(selectedCard));
+    } catch (error) {
+      console.error("Erro ao salvar dados no AsyncStorage: ", error);
+    }
+  };
 
   const incrementCoins = () => {
     setCoins(coins + click);
@@ -348,10 +289,10 @@ const saveGameState = async () => {
 
   const resetCoins = () => {
     setCoinsPS(0.0);
-    setCoins(0.0); // Reinicia para 0.0
-    setClick(1); // Reinicia para 1.0
-    setItemQuantities({}); // Reinicia para um objeto vazio
-    setCardsList(cardsList.map((card) => ({ ...card, owned: false }))); // Define todas as cartas como 'owned = false'
+    setCoins(0.0);
+    setClick(1);
+    setItemQuantities({});
+    setCardsList(cardsList.map((card) => ({ ...card, owned: false })));
     console.log("!! RESETOU TUDO !!");
   };
 
@@ -364,12 +305,12 @@ const saveGameState = async () => {
     const clickSound = new Audio.Sound();
 
     try {
-      await clickSound.loadAsync(require('./assets/sounds/click.mp3'));
+      await clickSound.loadAsync(require("./assets/sounds/click.mp3"));
       await clickSound.setStatusAsync({ positionMillis: 310 });
       await clickSound.setVolumeAsync(1);
       await clickSound.playAsync();
     } catch (error) {
-      console.error('Erro ao reproduzir o som:', error);
+      console.error("Erro ao reproduzir o som:", error);
     }
 
     setModalVisible(true);
@@ -379,40 +320,40 @@ const saveGameState = async () => {
     const clickSound = new Audio.Sound();
 
     try {
-      await clickSound.loadAsync(require('./assets/sounds/click.mp3'));
+      await clickSound.loadAsync(require("./assets/sounds/click.mp3"));
       await clickSound.setStatusAsync({ positionMillis: 310 });
       await clickSound.setVolumeAsync(1);
       await clickSound.playAsync();
     } catch (error) {
-      console.error('Erro ao reproduzir o som:', error);
+      console.error("Erro ao reproduzir o som:", error);
     }
     setModalVisible(false);
   };
 
-  const openPacksModal  = async () => {
+  const openPacksModal = async () => {
     const clickSound = new Audio.Sound();
 
     try {
-      await clickSound.loadAsync(require('./assets/sounds/click.mp3'));
+      await clickSound.loadAsync(require("./assets/sounds/click.mp3"));
       await clickSound.setStatusAsync({ positionMillis: 310 });
       await clickSound.setVolumeAsync(1);
       await clickSound.playAsync();
     } catch (error) {
-      console.error('Erro ao reproduzir o som:', error);
+      console.error("Erro ao reproduzir o som:", error);
     }
     setPackModalVisible(true);
   };
 
-  const packsModalClose  = async () => {
+  const packsModalClose = async () => {
     const clickSound = new Audio.Sound();
 
     try {
-      await clickSound.loadAsync(require('./assets/sounds/click.mp3'));
+      await clickSound.loadAsync(require("./assets/sounds/click.mp3"));
       await clickSound.setStatusAsync({ positionMillis: 310 });
       await clickSound.setVolumeAsync(1);
       await clickSound.playAsync();
     } catch (error) {
-      console.error('Erro ao reproduzir o som:', error);
+      console.error("Erro ao reproduzir o som:", error);
     }
     setPackModalVisible(false);
   };
@@ -421,33 +362,33 @@ const saveGameState = async () => {
     const clickSound = new Audio.Sound();
 
     try {
-      await clickSound.loadAsync(require('./assets/sounds/click.mp3'));
+      await clickSound.loadAsync(require("./assets/sounds/click.mp3"));
       await clickSound.setStatusAsync({ positionMillis: 310 });
       await clickSound.setVolumeAsync(1);
       await clickSound.playAsync();
     } catch (error) {
-      console.error('Erro ao reproduzir o som:', error);
+      console.error("Erro ao reproduzir o som:", error);
     }
     setDeckModalVisible(true);
   };
 
-  const DeckModalClose  = async () => {
+  const DeckModalClose = async () => {
     const clickSound = new Audio.Sound();
 
     try {
-      await clickSound.loadAsync(require('./assets/sounds/click.mp3'));
+      await clickSound.loadAsync(require("./assets/sounds/click.mp3"));
       await clickSound.setStatusAsync({ positionMillis: 310 });
       await clickSound.setVolumeAsync(1);
       await clickSound.playAsync();
     } catch (error) {
-      console.error('Erro ao reproduzir o som:', error);
+      console.error("Erro ao reproduzir o som:", error);
     }
     setDeckModalVisible(false);
   };
 
-  // const addClick = (value) => {
-  //   setClick(click + value);
-  // };
+   const addClick = (value) => {
+     setClick(click + value);
+   };
 
   function getItemsList() {
     const items = getItems();
@@ -458,24 +399,23 @@ const saveGameState = async () => {
     return Object.keys(packs).map((key) => ({ ...packs[key], id: key }));
   }
 
-
   function getCardsList() {
-    if (!cardsList.length) { // Verifica se todos os cards têm owned como falso
-        const cards = getCards();
-        const newList = Object.keys(cards).map((key) => ({ ...cards[key], id: key }));
-        setCardsList(newList); // Set the state of cardsList
-        return newList;
+    if (!cardsList.length) {
+      const cards = getCards();
+      const newList = Object.keys(cards).map((key) => ({
+        ...cards[key],
+        id: key,
+      }));
+      setCardsList(newList);
+      return newList;
     }
     return cardsList;
-}
-
-
-  
-  function setCards(newList) {
-      setCardsList(newList);
-      cardsList = newList; // Atualiza a lista de cartas em cache
   }
-  
+
+  function setCards(newList) {
+    setCardsList(newList);
+    cardsList = newList;
+  }
 
   const buyItem = (itemId, itemCost, plusClick) => {
     final = itemCost * (1.3 * itemQuantities[itemId] || 0) || itemCost;
@@ -497,9 +437,8 @@ const saveGameState = async () => {
     }
   };
 
-  // Função para sortear cartas
   function shuffle(array) {
-    const shuffledArray = array.slice(); // Copiando o array para não modificar o original
+    const shuffledArray = array.slice();
     for (let i = shuffledArray.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [shuffledArray[i], shuffledArray[j]] = [
@@ -517,15 +456,13 @@ const saveGameState = async () => {
       console.log("QUE CUSTA: " + itemCost);
       console.log(".");
       setCoins(coins - itemCost);
-      handleFlashEffect(); // Chama o efeito de flash após a compra bem-sucedida
+      handleFlashEffect();
 
-      // Sortear as cartas ao comprar o pacote
       const cards = getCardsList();
       const allCards = Object.values(cards);
       const shuffledCards = shuffle(allCards);
       const selectedCards = shuffledCards.slice(0, numberOfCards);
 
-      // Atualizar as cartas na lista para 'owned = true'
       const updatedCardList = cardsList.map((card) => {
         if (selectedCards.some((selectedCard) => selectedCard.id === card.id)) {
           return {
@@ -537,11 +474,9 @@ const saveGameState = async () => {
         }
       });
 
-      // Atualizar o estado das cartas
       setCardsList(updatedCardList);
       setSelectedCards(selectedCards);
 
-      // Aqui você pode fazer algo com as cartas selecionadas, como exibir para o jogador
       console.log("Cartas selecionadas:", selectedCards);
     } else {
       alert("Você não tem moedas suficientes para comprar este item!");
@@ -549,7 +484,6 @@ const saveGameState = async () => {
   };
 
   if (!fontLoaded) {
-    // Renderiza a tela de carregamento enquanto a fonte está sendo carregada
     return (
       <View
         style={{
@@ -557,7 +491,6 @@ const saveGameState = async () => {
           justifyContent: "center",
           alignItems: "center",
         }}
-        
       >
         <StatusBar hidden />
         <LinearGradient
@@ -590,7 +523,6 @@ const saveGameState = async () => {
   }
 
   if (!assetLoaded) {
-    // Renderiza a tela de carregamento enquanto as imagens estão sendo carregadas
     return (
       <View
         style={{
@@ -630,7 +562,6 @@ const saveGameState = async () => {
   }
 
   return (
-    
     <View style={styles.container}>
       <StatusBar hidden />
       <Image source={Background} style={styles.backgroundImage} />
@@ -685,6 +616,21 @@ const saveGameState = async () => {
               resizeMode="cover"
               style={styles.BackgroundStores}
             >
+              <StoreItemClick
+                itemId={654766567567}
+                image={require("./assets/game_imgs/storeItems/Castle.jpeg")}
+                title={"PlusClick"}
+                initialCost={600}
+                plusClick={1}
+                coins={0}
+                setCoins={setCoins}
+                quantity={itemQuantities[654766567567] || 0}
+                buyItem={() => {
+                  buyItem(654766567567, 600, 0);
+                  addClick(1);
+                }}
+              />
+
               {getItemsList().map((item) => (
                 <TouchableOpacity key={item.id}>
                   <StoreItem
@@ -951,11 +897,11 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     width: "100%",
   },
-  containerSlot:{
-     display:"flex",
-     justifyContent:"center",
-     alignSelf:"center",
-     paddingBottom: 70
+  containerSlot: {
+    display: "flex",
+    justifyContent: "center",
+    alignSelf: "center",
+    paddingBottom: 70,
   },
   CardsSection: {
     display: "flex",
