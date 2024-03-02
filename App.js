@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Audio } from 'expo-av';
 import { Asset } from "expo-asset";
 import { StatusBar } from "expo-status-bar";
 import { ProgressBar, MD3Colors } from "react-native-paper";
@@ -13,6 +14,7 @@ import {
   Text,
   Animated,
   ImageBackground,
+  Alert,
 } from "react-native";
 import Background from "./assets/game_imgs/backgroundGame.jpg";
 import BackgroundStoreCoin from "./assets/game_imgs/itemStoreBKG.jpg";
@@ -26,6 +28,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import * as Font from "expo-font";
 import { getItems } from "./item";
 import Pack from "./components/Pack";
+import CardSlot from "./components/CardSlot";
 import { getPacks } from "./pack";
 import { getCards } from "./card";
 
@@ -38,9 +41,12 @@ export default function App() {
   const [click, setClick] = useState(1.0);
   const [coins, setCoins] = useState(0.0);
   const [coinsPS, setCoinsPS] = useState(0.0);
+  const [powerUp, setPowerUp] = useState(1.0);
+  const [coinsPSbefore, setCoinsPSBefore] = useState(0.0);
   const [itemQuantities, setItemQuantities] = useState({});
   const formattedCoins = coins % 1 === 0 ? coins.toFixed(0) : coins.toFixed(2);
   const displayCoins = parseFloat(formattedCoins).toString();
+
 
   const [fontLoaded, setFontLoaded] = useState(false);
   const [assetLoaded, setAssetLoaded] = useState(false);
@@ -52,6 +58,54 @@ export default function App() {
   const [cardModalVisible, setCardModalVisible] = useState(false); // Estado para controlar a visibilidade do CardModal
   const [selectedCards, setSelectedCards] = useState([]); // Estado para armazenar as cartas sorteadas
   const [cardsList, setCardsList] = useState([]);
+
+
+  const [slots, setSlots] = useState(Array(3).fill(null)); // Inicializa os slots como vazios
+
+  // const putCard = (card) => {
+  //   // Verifica se o cartão já está presente em algum slot
+  //   const isCardAlreadyInSlot = slots.includes(card);
+  //   console.log("Cartão já está em um slot?", isCardAlreadyInSlot);
+
+  //   // Encontra o primeiro slot vazio
+  //   const emptySlotIndex = slots.findIndex((slot) => slot === null);
+  //   console.log("Índice do primeiro slot vazio:", emptySlotIndex);
+
+  //   // Verifica se o usuário possui a carta e se o slot está vazio
+  //   if (card && card.owned && emptySlotIndex !== -1) {
+  //     const updatedSlots = [...slots];
+  //     updatedSlots[emptySlotIndex] = card;
+  //     setSlots(updatedSlots);
+  //     console.log("Cartão adicionado ao slot");
+  //   } else {
+  //     // Caso contrário, exibe uma mensagem de alerta
+  //     alert("Você não possui essa carta ainda. Compre mais pacotes na loja.");
+  //   }
+  // };
+
+  const [selectedCard, setSelectedCard] = useState(null);
+
+  const handleCardPress = (card) => {
+    console.log(card.owned);
+    if (card.owned == true) {
+      setPowerUp(card.multiplicador); // Atualize o estado de powerUp
+      console.log("MULTIPLICADOR: ", card.multiplicador, powerUp);
+      Alert.alert("Tinha essa carta");
+      setCoinsPSBefore(coinsPS);
+      setCoinsPS(coinsPS * card.multiplicador); // Use card.multiplicador diretamente
+      setSelectedCard(card);
+    } else {
+      Alert.alert("Compra mais cartas trouxinha");
+    }
+
+  };
+  
+
+  const handleSlotPress = () => {
+    setCoinsPS(coinsPSbefore);
+    setPowerUp(1.0)
+    setSelectedCard(null);
+  };
 
   const handleFlashEffectWrapper = (color) => () => {
     handleFlashEffect(color);
@@ -108,7 +162,6 @@ export default function App() {
     async function loadAssets() {
       await new Promise((resolve) => setTimeout(resolve, 4000));
 
-
       console.log("CARREGOU IMAGEM"),
         await Asset.loadAsync([
           require("./assets/game_imgs/backgroundGame.jpg"),
@@ -131,15 +184,80 @@ export default function App() {
           require("./assets/game_imgs/storeItems/S-HellFactory.jpeg"),
           require("./assets/game_imgs/storeItems/Skelleton.jpeg"),
           require("./assets/game_imgs/storeItems/X-HellFactory.jpeg"),
+          require("./assets/game_imgs/cards/AlterEgo.png"),
+          
+          require("./assets/game_imgs/cards/Blood Marry.png"),
+          require("./assets/game_imgs/cards/Blood Witch.png"),
+          require("./assets/game_imgs/cards/BloodPrinces.png"),
+          require("./assets/game_imgs/cards/Dark Vampyra.png"),
+          require("./assets/game_imgs/cards/Drakula.png"),
+          require("./assets/game_imgs/cards/Red Witch.png"),
+          require("./assets/game_imgs/cards/Subman.png"),
+          require("./assets/game_imgs/cards/Vampyra.png")
         ]);
+        console.log("VOU FAZER UMA MERDINHA AQUI ");
 
-      setAssetLoaded(true);
-      const cardsList = getCardsList();
-      setCards(cardsList);
+        // Aqui você pode incluir a lógica para carregar e reproduzir o áudio
+        const soundObject = new Audio.Sound();
+    
+        try {
+          // Carregar o arquivo de áudio
+          await soundObject.loadAsync(require("./assets/sounds/gameMusic.mp3"));
+    
+          // Definir loop para true para reprodução em loop
+          await soundObject.setIsLoopingAsync(true);
+
+          await soundObject.setVolumeAsync(0.2);
+    
+          // Iniciar a reprodução do áudio
+          await soundObject.playAsync();
+        } catch (error) {
+          console.log('Erro ao reproduzir o áudio:', error);
+        }
+    
+        // Chame a função para carregar as cartas depois de carregar as imagens e o áudio
+        getCards();
+    
+        // Indique que todos os ativos foram carregados
+        setAssetLoaded(true);
     }
 
     loadAssets();
   }, []);
+
+
+  // useEffect(() => {
+  //   // Função para carregar e reproduzir o áudio
+  //   async function playSound() {
+  //     const soundObject = new Audio.Sound();
+
+  //     try {
+  //       // Carregar o arquivo de áudio
+  //       await soundObject.loadAsync(require('./assets/sounds/gameMusic.mp3'));
+
+  //       // Definir loop para true para reprodução em loop
+  //       await soundObject.setIsLoopingAsync(true);
+
+  
+
+  //       // Iniciar a reprodução do áudio
+  //       await soundObject.playAsync();
+  //     } catch (error) {
+  //       console.log('Erro ao reproduzir o áudio:', error);
+  //     }
+  //   }
+
+  //   // Chamar a função para reproduzir o áudio quando o componente for montado
+  //   playSound();
+
+  //   // Retornar uma função de limpeza para interromper a reprodução ao desmontar o componente
+  //   return () => {
+  //     soundObject.stopAsync();
+  //     soundObject.unloadAsync();
+  //   };
+  // }, []); // Executar o efeito apenas uma vez, passando um array vazio como segundo argumento
+
+  
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -155,15 +273,20 @@ export default function App() {
 
   useEffect(() => {
     saveGameState();
-  }, [click, coins, itemQuantities]);
+  }, [click, coins, coinsPS, itemQuantities, cardsList, selectedCard, coinsPSbefore, powerUp]);
 
   const loadGameState = async () => {
     try {
       const savedClick = await AsyncStorage.getItem("click");
       const savedCoins = await AsyncStorage.getItem("coins");
       const savedCoinsPS = await AsyncStorage.getItem("coinsPS");
+      const savedCoinsPSBefore = await AsyncStorage.getItem("coinsPSbefore");
       const savedItemQuantities = await AsyncStorage.getItem("itemQuantities");
-
+      const savedCardsList = await AsyncStorage.getItem("cardsList"); 
+      const savedSelectedCard = await AsyncStorage.getItem("selectedCard");
+      const savedPowerUp = await AsyncStorage.getItem("powerUp");
+      
+  
       if (savedClick !== null) {
         setClick(parseFloat(savedClick));
       }
@@ -173,31 +296,50 @@ export default function App() {
       if (savedCoinsPS !== null) {
         setCoinsPS(parseFloat(savedCoinsPS));
       }
-
+      if (savedCoinsPSBefore !== null) {
+        setCoinsPSBefore(parseFloat(savedCoinsPSBefore));
+      }
+  
       if (savedItemQuantities !== null) {
         setItemQuantities(JSON.parse(savedItemQuantities));
+      }
+  
+      if (savedCardsList !== null) {
+        setCardsList(JSON.parse(savedCardsList)); // Alterado para definir a lista de cartas em cache
+      }
+      
+      if (savedSelectedCard !== null) {
+        setSelectedCard(JSON.parse(savedSelectedCard));
+      }
+      if (savedPowerUp !== null) {
+        console.log("DEU CERTO O CARREGAMENTO", savedPowerUp)
+        setPowerUp(parseFloat(savedPowerUp));
       }
     } catch (error) {
       console.error("Erro ao carregar dados do AsyncStorage: ", error);
     }
   };
-  // Salvar dados no AsyncStorage
-  const saveGameState = async () => {
-    try {
-      await AsyncStorage.setItem("click", click.toString());
-      await AsyncStorage.setItem("coins", coins.toString());
-      await AsyncStorage.setItem("coinsPS", coinsPS.toString()); // Salva coinsPS
-      console.log("SLAVOU: " + click.toString());
-      console.log("SLAVOU: " + coins.toString());
-      console.log("SLAVOU: " + coinsPS.toString());
-      await AsyncStorage.setItem(
-        "itemQuantities",
-        JSON.stringify(itemQuantities)
-      );
-    } catch (error) {
-      console.error("Erro ao salvar dados no AsyncStorage: ", error);
-    }
-  };
+  
+  
+ 
+const saveGameState = async () => {
+  try {
+    await AsyncStorage.setItem("click", click.toString());
+    await AsyncStorage.setItem("coins", coins.toString());
+    await AsyncStorage.setItem("coinsPS", coinsPS.toString());
+    await AsyncStorage.setItem("powerUp", powerUp.toString());
+    console.log("SALVOU ESSe power:", powerUp); 
+    await AsyncStorage.setItem("coinsPSbefore", coinsPSbefore.toString());
+    await AsyncStorage.setItem("itemQuantities", JSON.stringify(itemQuantities));
+    await AsyncStorage.setItem("cardsList", JSON.stringify(cardsList));
+    await AsyncStorage.setItem("selectedCard", JSON.stringify(selectedCard));
+
+  } catch (error) {
+    console.error("Erro ao salvar dados no AsyncStorage: ", error);
+  }
+};
+
+
 
   const incrementCoins = () => {
     setCoins(coins + click);
@@ -218,27 +360,88 @@ export default function App() {
     console.log("!! GANHOU TUDO !!");
   };
 
-  const openModal = () => {
+  const openModal = async () => {
+    const clickSound = new Audio.Sound();
+
+    try {
+      await clickSound.loadAsync(require('./assets/sounds/click.mp3'));
+      await clickSound.setStatusAsync({ positionMillis: 310 });
+      await clickSound.setVolumeAsync(1);
+      await clickSound.playAsync();
+    } catch (error) {
+      console.error('Erro ao reproduzir o som:', error);
+    }
+
     setModalVisible(true);
   };
 
-  const closeModal = () => {
+  const closeModal = async () => {
+    const clickSound = new Audio.Sound();
+
+    try {
+      await clickSound.loadAsync(require('./assets/sounds/click.mp3'));
+      await clickSound.setStatusAsync({ positionMillis: 310 });
+      await clickSound.setVolumeAsync(1);
+      await clickSound.playAsync();
+    } catch (error) {
+      console.error('Erro ao reproduzir o som:', error);
+    }
     setModalVisible(false);
   };
 
-  const openPacksModal = () => {
+  const openPacksModal  = async () => {
+    const clickSound = new Audio.Sound();
+
+    try {
+      await clickSound.loadAsync(require('./assets/sounds/click.mp3'));
+      await clickSound.setStatusAsync({ positionMillis: 310 });
+      await clickSound.setVolumeAsync(1);
+      await clickSound.playAsync();
+    } catch (error) {
+      console.error('Erro ao reproduzir o som:', error);
+    }
     setPackModalVisible(true);
   };
 
-  const packsModalClose = () => {
+  const packsModalClose  = async () => {
+    const clickSound = new Audio.Sound();
+
+    try {
+      await clickSound.loadAsync(require('./assets/sounds/click.mp3'));
+      await clickSound.setStatusAsync({ positionMillis: 310 });
+      await clickSound.setVolumeAsync(1);
+      await clickSound.playAsync();
+    } catch (error) {
+      console.error('Erro ao reproduzir o som:', error);
+    }
     setPackModalVisible(false);
   };
 
-  const openDeckModal = () => {
+  const openDeckModal = async () => {
+    const clickSound = new Audio.Sound();
+
+    try {
+      await clickSound.loadAsync(require('./assets/sounds/click.mp3'));
+      await clickSound.setStatusAsync({ positionMillis: 310 });
+      await clickSound.setVolumeAsync(1);
+      await clickSound.playAsync();
+    } catch (error) {
+      console.error('Erro ao reproduzir o som:', error);
+    }
     setDeckModalVisible(true);
   };
 
-  const DeckModalClose = () => {
+  const DeckModalClose  = async () => {
+    const clickSound = new Audio.Sound();
+
+    try {
+      await clickSound.loadAsync(require('./assets/sounds/click.mp3'));
+      await clickSound.setStatusAsync({ positionMillis: 310 });
+      await clickSound.setVolumeAsync(1);
+      await clickSound.playAsync();
+    } catch (error) {
+      console.error('Erro ao reproduzir o som:', error);
+    }
     setDeckModalVisible(false);
   };
 
@@ -254,14 +457,25 @@ export default function App() {
     const packs = getPacks();
     return Object.keys(packs).map((key) => ({ ...packs[key], id: key }));
   }
-  function getCardsList() {
-    const cards = getCards();
-    return Object.keys(cards).map((key) => ({ ...cards[key], id: key }));
-  }
 
+
+  function getCardsList() {
+    if (!cardsList.length) { // Verifica se todos os cards têm owned como falso
+        const cards = getCards();
+        const newList = Object.keys(cards).map((key) => ({ ...cards[key], id: key }));
+        setCardsList(newList); // Set the state of cardsList
+        return newList;
+    }
+    return cardsList;
+}
+
+
+  
   function setCards(newList) {
-    setCardsList(newList);
+      setCardsList(newList);
+      cardsList = newList; // Atualiza a lista de cartas em cache
   }
+  
 
   const buyItem = (itemId, itemCost, plusClick) => {
     final = itemCost * (1.3 * itemQuantities[itemId] || 0) || itemCost;
@@ -312,9 +526,8 @@ export default function App() {
       const selectedCards = shuffledCards.slice(0, numberOfCards);
 
       // Atualizar as cartas na lista para 'owned = true'
-      const updatedCardList = cards.map((card) => {
+      const updatedCardList = cardsList.map((card) => {
         if (selectedCards.some((selectedCard) => selectedCard.id === card.id)) {
-          console.log("tem true");
           return {
             ...card,
             owned: true,
@@ -335,7 +548,7 @@ export default function App() {
     }
   };
 
-  if (!fontLoaded && !assetLoaded) {
+  if (!fontLoaded) {
     // Renderiza a tela de carregamento enquanto a fonte está sendo carregada
     return (
       <View
@@ -344,7 +557,49 @@ export default function App() {
           justifyContent: "center",
           alignItems: "center",
         }}
+        
       >
+        <StatusBar hidden />
+        <LinearGradient
+          colors={["#242424", "#000"]}
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            width: "100%",
+            height: "100%",
+          }}
+        >
+          <ProgressBar
+            progress={0.75}
+            color={MD3Colors.error50}
+            style={{
+              height: 7,
+              width: 250,
+              borderRadius: 10,
+              marginBottom: 20,
+            }}
+          />
+
+          <Text style={{ color: "white", fontWeight: "bold" }}>
+            Carregando...
+          </Text>
+        </LinearGradient>
+      </View>
+    );
+  }
+
+  if (!assetLoaded) {
+    // Renderiza a tela de carregamento enquanto as imagens estão sendo carregadas
+    return (
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <StatusBar hidden />
         <LinearGradient
           colors={["#242424", "#000"]}
           style={{
@@ -375,7 +630,9 @@ export default function App() {
   }
 
   return (
+    
     <View style={styles.container}>
+      <StatusBar hidden />
       <Image source={Background} style={styles.backgroundImage} />
       <View style={styles.header}>
         <Header coinse={coins} coinsPS={coinsPS} />
@@ -546,20 +803,35 @@ export default function App() {
               <Icon name="close" size={25} color="#000" />
             </TouchableOpacity>
           </LinearGradient>
+
           <ScrollView style={styles.scrollContainerCards}>
             <ImageBackground
               source={BackgroundStorePacks}
               resizeMode="cover"
               style={styles.BackgroundStores}
             >
+              <TouchableOpacity
+                style={styles.containerSlot}
+                onPress={handleSlotPress}
+              >
+                <CardSlot
+                  card={selectedCard}
+                  onPress={() => handleSlotPress(selectedCard)}
+                />
+              </TouchableOpacity>
+
               <View style={styles.CardsSection}>
-                {cardsList.map((card) => {
+                {/* Renderiza os cards */}
+                {getCardsList().map((card) => {
                   const opacity = card.owned ? 1 : 0.5;
-                  console.log("TEM: ", card.id, card.owned);
 
                   return (
-                    <TouchableOpacity key={card.id}>
-                      <View style={{ opacity: opacity }}>
+                    <TouchableOpacity
+                      key={card.id}
+                      onPress={() => handleCardPress(card)}
+                      style={{ opacity: opacity }}
+                    >
+                      <View>
                         <Card
                           itemId={card.id}
                           image={card.image}
@@ -568,6 +840,7 @@ export default function App() {
                           style={styles.cardStyle}
                           cardSize={styles.cardSize}
                           styleFont={styles.styleFont}
+                          onPress={() => handleCardPress(card)}
                         />
                       </View>
                     </TouchableOpacity>
@@ -633,7 +906,7 @@ const styles = StyleSheet.create({
   },
   BackgroundStores: {
     paddingHorizontal: 15,
-    paddingVertical: 80,
+    paddingVertical: 30,
   },
   close: {
     opacity: 0.7,
@@ -670,12 +943,19 @@ const styles = StyleSheet.create({
     paddingBottom: 50,
   },
   PacksSection: {
+    marginTop: 50,
     display: "flex",
     justifyContent: "center",
     gap: 20,
     flexDirection: "row",
     flexWrap: "wrap",
     width: "100%",
+  },
+  containerSlot:{
+     display:"flex",
+     justifyContent:"center",
+     alignSelf:"center",
+     paddingBottom: 70
   },
   CardsSection: {
     display: "flex",
@@ -684,16 +964,23 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     width: "100%",
   },
-  cardSize:{
-     width: 110,
-     height:190,
-
+  cardSlots: {
+    padding: 20,
+    display: "flex",
+    flexDirection: "row",
+    gap: 15,
+    justifyContent: "center",
+    alignSelf: "center",
+    marginBottom: 30,
   },
-  styleFont:{
-    fontSize: 20 
-
+  cardSize: {
+    width: 110,
+    height: 190,
   },
-  cardStyle:{
+  styleFont: {
+    fontSize: 20,
+  },
+  cardStyle: {
     width: 130,
   },
 

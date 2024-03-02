@@ -2,9 +2,11 @@ import React, { useEffect } from "react";
 import { View, Text, StyleSheet } from "react-native";
 
 const Header = ({ coinse, coinsPS }) => {
-  const formattedCoins =
-    coinse % 1 === 0 ? coinse.toFixed(0) : coinse.toFixed(2);
+  const formattedCoins = coinse % 1 === 0 ? coinse.toFixed(0) : coinse.toFixed(2);
   const displayCoins = parseFloat(formattedCoins).toString();
+  
+  const formattedCoinsPS = coinsPS % 1 === 0 ? coinsPS.toFixed(0) : coinsPS.toFixed(2);
+  const displayCoinsPS = parseFloat(formattedCoinsPS).toString();
 
   return (
     <View style={styles.container}>
@@ -12,7 +14,7 @@ const Header = ({ coinse, coinsPS }) => {
         {displayCoins} Evil Coins!
       </Text>
       <Text style={styles.text2}>
-        {coinsPS} Cps
+        {displayCoinsPS} Cps
       </Text>
     </View>
   );

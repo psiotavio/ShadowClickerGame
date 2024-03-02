@@ -11,10 +11,10 @@ import {
 const Card = ({
   image,
   title,
-  itemId,
-  style, // Adicionando a propriedade 'style' ao destructuring dos props
-  styleFont, // Adicionando a propriedade 'style' ao destructuring dos props
-  cardSize, // Adicionando a propriedade 'style' ao destructuring dos props
+  style,
+  styleFont,
+  cardSize,
+  onPress
 }) => {
   const [isTablet, setIsTablet] = useState(false);
 
@@ -26,7 +26,8 @@ const Card = ({
 
   return (
     <TouchableOpacity
-      style={[styles.itemBuy, isTablet && styles.itemBuyTablet, style]} // Aplicando o estilo adicional ao TouchableOpacity
+      style={[styles.itemBuy, isTablet && styles.itemBuyTablet, style]}
+      onPress={onPress}
     >
       <View style={styles.container}>
         <Image
@@ -51,7 +52,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   image: {
-    objectFit: "contain",
     width: 170,
     height: 220,
     marginRight: 3,
@@ -69,13 +69,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#f2f2f2",
     fontFamily: "ProtestRevolution-Regular",
-  },
-  cost: {
-    fontFamily: "ProtestRevolution-Regular",
-    fontSize: 20,
-    marginTop: 5,
-    color: "#f2f2f2",
-    fontWeight: "bold",
   },
 });
 

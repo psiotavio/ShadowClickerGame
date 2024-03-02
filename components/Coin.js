@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { TouchableWithoutFeedback, Image, StyleSheet, Dimensions, Text } from 'react-native';
+import { Audio } from 'expo-av';
 
 const windowWidth = Dimensions.get('window').width;
 
@@ -15,8 +16,23 @@ const Coin = ({ incrementCoins }) => {
     setCoinSize(windowWidth > 600 ? windowWidth * 0.45 : windowWidth * 0.6); // Retorna ao tamanho original
   };
 
-  const handleClick = () => {
+  const handleClick = async () => {
+    // Carregar o som
+    const clickSound = new Audio.Sound();
+
+    try {
+      await clickSound.loadAsync(require('../assets/sounds/click.mp3'));
+      await clickSound.setStatusAsync({ positionMillis: 310 });
+      await clickSound.setVolumeAsync(1);
+      await clickSound.playAsync();
+    } catch (error) {
+      console.error('Erro ao reproduzir o som:', error);
+    }
+
+    // Sua lógica de manipulação do clique
     incrementCoins();
+
+    // Não descarregue o som aqui para que ele continue tocando até o final
   };
 
   return (

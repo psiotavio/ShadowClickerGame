@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Audio } from "expo-av";
 import {
   View,
   Text,
@@ -12,7 +13,7 @@ import PropTypes from "prop-types";
 const StoreItem = ({
   image,
   title,
-  initialCost, 
+  initialCost,
   plusClick,
   buyItem,
   itemId,
@@ -28,12 +29,29 @@ const StoreItem = ({
   }, []);
 
   // Calcula o custo final com base no custo inicial e na quantidade comprada
-  const finalCost = Math.ceil(initialCost * Math.pow(1.3, quantity)).toLocaleString();
+  const finalCost = Math.ceil(
+    initialCost * Math.pow(1.3, quantity)
+  ).toLocaleString();
 
+  const handleClick = async () => {
+    const clickSound = new Audio.Sound();
+
+    try {
+      await clickSound.loadAsync(require("../assets/sounds/click.mp3"));
+      await clickSound.setStatusAsync({ positionMillis: 310 });
+      await clickSound.setVolumeAsync(1);
+      await clickSound.playAsync();
+    } catch (error) {
+      console.error("Erro ao reproduzir o som:", error);
+    }
+  };
 
   return (
     <TouchableOpacity
-      onPress={() => buyItem(itemId, initialCost, plusClick)}
+      onPress={() => {
+        buyItem(itemId, initialCost, plusClick);
+        handleClick();
+      }}
       style={[styles.itemBuy, isTablet && styles.itemBuyTablet]}
     >
       <View style={styles.container}>
@@ -69,7 +87,7 @@ const StoreItem = ({
 StoreItem.propTypes = {
   image: PropTypes.number.isRequired,
   title: PropTypes.string.isRequired,
-  initialCost: PropTypes.number.isRequired, 
+  initialCost: PropTypes.number.isRequired,
   coins: PropTypes.number.isRequired,
   setCoins: PropTypes.func.isRequired,
 };

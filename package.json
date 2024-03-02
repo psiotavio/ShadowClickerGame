@@ -14,6 +14,7 @@
     "@types/react": "~18.2.45",
     "expo": "~50.0.7",
     "expo-asset": "^9.0.2",
+    "expo-av": "~13.10.5",
     "expo-font": "~11.10.3",
     "expo-linear-gradient": "~12.7.2",
     "expo-status-bar": "~1.11.1",
